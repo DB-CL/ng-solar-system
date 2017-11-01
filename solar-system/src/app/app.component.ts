@@ -1,7 +1,5 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 
-import { Planet, Sun, Mars } from './planets/index';
-
 import * as THREE from 'three';
 declare const require: (moduleId: string) => any;
 const OrbitControls = require('three-orbit-controls')(THREE);
@@ -19,9 +17,6 @@ export class AppComponent implements OnInit {
     private renderer: THREE.WebGLRenderer;
     private scene;
     private controls: any;
-
-    private sun: Sun;
-    private mars: Planet;
 
     constructor(private core: CoreService) {}
 
@@ -42,6 +37,18 @@ export class AppComponent implements OnInit {
         );
 
         this.core.animate();
+    }
+
+    public centerOn(object: string) {
+        this.core.centerCameraOn(object);
+    }
+
+    public onSliderChange(event: any) {
+        this.core.setAngle(event.value)
+    }
+
+    public onSliderChange2(event: any) {
+        this.core.setAngle2(event.value)
     }
 
     public update() {

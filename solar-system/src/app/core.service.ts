@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 
-import { Planet, Sun, Mars, Earth } from './planets/index';
+import { Orbitable, Sun, Mars, Earth, SpaceObject} from './objects/index';
 
 import * as THREE from 'three';
 declare const require: (moduleId: string) => any;
@@ -13,7 +13,8 @@ export class CoreService {
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
     private scaleVector: THREE.Vector3;
-    public planets: Map<string, Planet>;
+    public planets: Map<string, Orbitable>;
+    private angle: number;
 
     public controls: any;
 
@@ -22,11 +23,32 @@ export class CoreService {
         this.planets = new Map();
     }
 
+    public setAngle(angle: number) {
+        this.angle = angle;
+        const Mars = this.planets.get('Mars');
+        //this.scene.remove(Mars.orbit);
+        Mars.argumentOfPeriapsis = angle;
+        console.log(angle, 'argument');
+        Mars.buildOrbit();
+        //this.scene.add(Mars.orbit);
+    }
+
+    public setAngle2(angle: number) {
+        this.angle = angle;
+        const Mars = this.planets.get('Mars');
+        //this.scene.remove(Mars.orbit);
+        Mars.inclination = angle;
+        console.log(angle, 'inclination');
+        Mars.buildOrbit();
+        //this.scene.add(Mars.orbit);
+    }
+
     public init(): void {
         this.buildScene();
         this.buildAxes(100);
+        this.buildSun();
         this.buildPlanets();
-        this.centerCameraOn('Earth');
+        this.centerCameraOn('Mars');
     }
 
     private buildScene() {
@@ -44,6 +66,7 @@ export class CoreService {
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0001, 10000);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableKeys = false;
 
         // enable animation loop when using damping or autorotation
         this.controls.enableDamping = true;
@@ -56,7 +79,8 @@ export class CoreService {
 
     }
 
-    private centerCameraOn(planetName: string) {
+    public centerCameraOn(planetName: string) {
+        console.log(planetName);
         const planet = this.planets.get(planetName);
         // this.camera.lookAt(planet.mesh.position);
         this.controls.target.set(planet.coordinates.getSceneX(), planet.coordinates.getSceneY(), planet.coordinates.getSceneZ());
@@ -86,19 +110,30 @@ export class CoreService {
     }
 
 
-    private buildPlanets() {
-        this.addPlanet(new Sun());
-        this.addPlanet(new Mars());
-        this.addPlanet(new Earth());
+    private buildSun() {
+        this.addSpaceObject(new Sun());
     }
 
-    private addPlanet(planet: Planet) {
-        this.scene.add(planet.mesh);
-        this.scene.add(planet.light);
+    private buildPlanets() {
+        this.addPlanet(new Mars());
+        // this.addPlanet(new Earth());
+    }
+
+    private addPlanet(planet: Orbitable) {
+        
+        this.addSpaceObject(planet);
+
         this.planets.set(planet.name, planet);
+
         if (planet.orbit !== undefined) {
             this.scene.add(planet.orbit);
         }
+    }
+
+    private addSpaceObject(spaceobject: SpaceObject) {
+        this.scene.add(spaceobject.mesh);
+        this.scene.add(spaceobject.light);
+        
     }
 
     private render() {

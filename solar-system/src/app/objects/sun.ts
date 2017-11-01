@@ -1,9 +1,9 @@
 import { environment } from 'environments/environment';
-import { Planet } from './planet';
+import { SpaceObject } from './spaceobject';
 import { HorizonCoordinates } from '../horizon-coordinates';
 import * as THREE from 'three';
 
-export class Sun extends Planet {
+export class Sun extends SpaceObject {
 
     constructor() {
         super();
