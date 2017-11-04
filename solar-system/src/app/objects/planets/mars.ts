@@ -1,23 +1,24 @@
 import { environment } from 'environments/environment';
-import { Orbitable } from '../orbitable';
+import { Orbitable, ObjectType } from '../index';
 import { HorizonCoordinates } from '../../horizon-coordinates';
 import * as THREE from 'three';
 
 export class Mars extends Orbitable {
     constructor() {
         super();
+        this.type = ObjectType.Planet;
         this.radius = 3396;
-        this.coordinates = new HorizonCoordinates(-1.609048911223828E+00, 4.208516516376911E-01, 4.830808910357868E-02);
+        this.coordinates = new HorizonCoordinates(-1.609048911223828, 4.208516516376911e-1, 4.830808910357868e-2);
         this.texture = 'assets/sun.jpg';
         this.name = 'Mars';
-        this.eccentricity = 9.347279630225067E-02;
-        this.majorAxis = 1.523667266799167E+00;
-        this.argumentOfPeriapsis = 2.866147678493510E+02;
-        this.ascendingNode = 4.950702495279573E+01;
-        this.inclination = 1.848362900525095E+00;
-        //this.inclination = 347.726;
-        this.trueAnomaly = 1.892089795488493E+02;
-        this.meanAnomaly = 1.910496428966482E+02;
+        this.eccentricity = 9.347279630225067e-2;
+        this.majorAxis = 1.523667266799167;
+        this.argumentOfPeriapsis = 2.86614767849351e2;
+        this.ascendingNode = 4.950702495279573e1;
+        this.inclination = 1.848362900525095;
+        // this.inclination = 347.726;
+        this.trueAnomaly = 1.892089795488493e2;
+        this.meanAnomaly = 1.910496428966482e2;
 
         this.build();
         this.buildOrbit();

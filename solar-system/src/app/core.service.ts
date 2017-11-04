@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 
-import { Orbitable, Sun, Mars, Earth, SpaceObject} from './objects/index';
+import { Orbitable, Sun, Mars, Earth, SpaceObject } from './objects/index';
 
 import * as THREE from 'three';
 declare const require: (moduleId: string) => any;
@@ -13,34 +13,16 @@ export class CoreService {
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
     private scaleVector: THREE.Vector3;
-    public planets: Map<string, Orbitable>;
     private angle: number;
 
     public controls: any;
 
+    public sun = new Sun();
+    public spaceObjects: Map<string, SpaceObject>;
+
     constructor() {
         this.scaleVector = new THREE.Vector3();
-        this.planets = new Map();
-    }
-
-    public setAngle(angle: number) {
-        this.angle = angle;
-        const Mars = this.planets.get('Mars');
-        //this.scene.remove(Mars.orbit);
-        Mars.argumentOfPeriapsis = angle;
-        console.log(angle, 'argument');
-        Mars.buildOrbit();
-        //this.scene.add(Mars.orbit);
-    }
-
-    public setAngle2(angle: number) {
-        this.angle = angle;
-        const Mars = this.planets.get('Mars');
-        //this.scene.remove(Mars.orbit);
-        Mars.inclination = angle;
-        console.log(angle, 'inclination');
-        Mars.buildOrbit();
-        //this.scene.add(Mars.orbit);
+        this.spaceObjects = new Map();
     }
 
     public init(): void {
@@ -76,54 +58,45 @@ export class CoreService {
 
         const ambLight = new THREE.AmbientLight(0x404040);
         this.scene.add(ambLight);
-
     }
 
-    public centerCameraOn(planetName: string) {
-        console.log(planetName);
-        const planet = this.planets.get(planetName);
+    public centerCameraOn(objectName: string) {
+        
+        const planet = this.spaceObjects.get(objectName);
         // this.camera.lookAt(planet.mesh.position);
         this.controls.target.set(planet.coordinates.getSceneX(), planet.coordinates.getSceneY(), planet.coordinates.getSceneZ());
 
         this.camera.position.x = planet.mesh.position.x;
         this.camera.position.y = planet.mesh.position.y;
-        this.camera.position.z = planet.mesh.position.z + 3 * planet.radius / environment.distanceCoef;
-        /*
-        this.camera.position.x = 150;
-        this.camera.position.y = 150;
-        this.camera.position.z = 150;
-        */
+        this.camera.position.z = planet.mesh.position.z + 30 * planet.radius / environment.distanceCoef;
     }
 
+    public buildAxes(length) {
+        const axes = new THREE.Object3D();
 
-    public buildAxes( length ) {
-        var axes = new THREE.Object3D();
-
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( length, 0, 0 ), 0xFF0000, false ) ); // +X
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -length, 0, 0 ), 0xFF0000, true) ); // -X
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, length, 0 ), 0x00FF00, false ) ); // +Y
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -length, 0 ), 0x00FF00, true ) ); // -Y
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, length ), 0x0000FF, false ) ); // +Z
-        axes.add( this.buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -length ), 0x0000FF, true ) ); // -Z
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(length, 0, 0), 0xff0000, false)); // +X
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(-length, 0, 0), 0xff0000, true)); // -X
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, length, 0), 0x00ff00, false)); // +Y
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -length, 0), 0x00ff00, true)); // -Y
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, length), 0x0000ff, false)); // +Z
+        axes.add(this.buildAxis(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -length), 0x0000ff, true)); // -Z
 
         this.scene.add(axes);
     }
 
-
     private buildSun() {
-        this.addSpaceObject(new Sun());
+        this.addSpaceObject(this.sun);
     }
 
     private buildPlanets() {
         this.addPlanet(new Mars());
-        // this.addPlanet(new Earth());
+        this.addPlanet(new Earth());
     }
 
     private addPlanet(planet: Orbitable) {
-        
         this.addSpaceObject(planet);
 
-        this.planets.set(planet.name, planet);
+        this.spaceObjects.set(planet.name, planet);
 
         if (planet.orbit !== undefined) {
             this.scene.add(planet.orbit);
@@ -133,7 +106,6 @@ export class CoreService {
     private addSpaceObject(spaceobject: SpaceObject) {
         this.scene.add(spaceobject.mesh);
         this.scene.add(spaceobject.light);
-        
     }
 
     private render() {
@@ -143,11 +115,11 @@ export class CoreService {
     }
 
     public animate() {
-       requestAnimationFrame(() => this.animate());
-        this.planets.forEach(planet => {
+        requestAnimationFrame(() => this.animate());
+        this.spaceObjects.forEach(spaceObject => {
             const scaleFactor = 8;
-            const sprite = planet.mesh.children[0];
-            const scale = this.scaleVector.subVectors(planet.mesh.position, this.camera.position).length() / scaleFactor;
+            const sprite = spaceObject.mesh.children[0];
+            const scale = this.scaleVector.subVectors(spaceObject.mesh.position, this.camera.position).length() / scaleFactor;
             sprite.scale.set(scale, scale, 1);
         });
 
@@ -160,23 +132,22 @@ export class CoreService {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    private buildAxis( src, dst, colorHex, dashed ) {
-        var geom = new THREE.Geometry(),
-            mat; 
+    private buildAxis(src, dst, colorHex, dashed) {
+        const geom = new THREE.Geometry();
+        let mat: any;
 
-        if(dashed) {
-                mat = new THREE.LineDashedMaterial({ linewidth: 3, color: colorHex, dashSize: 3, gapSize: 3 });
+        if (dashed) {
+            mat = new THREE.LineDashedMaterial({ linewidth: 3, color: colorHex, dashSize: 3, gapSize: 3 });
         } else {
-                mat = new THREE.LineBasicMaterial({ linewidth: 3, color: colorHex });
+            mat = new THREE.LineBasicMaterial({ linewidth: 3, color: colorHex });
         }
 
-        geom.vertices.push( src.clone() );
-        geom.vertices.push( dst.clone() );
+        geom.vertices.push(src.clone());
+        geom.vertices.push(dst.clone());
         geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
 
-        var axis = new THREE.Line( geom, mat, THREE.LinePieces );
+        const axis = new THREE.Line(geom, mat, THREE.LinePieces);
 
         return axis;
-
-}
+    }
 }

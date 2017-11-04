@@ -1,23 +1,25 @@
 import { environment } from 'environments/environment';
-import { Orbitable } from '../orbitable';
+import { Orbitable, ObjectType } from '../index';
 import { HorizonCoordinates } from '../../horizon-coordinates';
 import * as THREE from 'three';
 
 export class Earth extends Orbitable {
     constructor() {
         super();
+        this.type = ObjectType.Planet;
+        this.code = 399;
         this.radius = 6378.137;
-        this.coordinates = new HorizonCoordinates(8.085189297377026E-01, 5.770742450594002E-01, -2.783714659030374E-05);
+        this.coordinates = new HorizonCoordinates(8.085189297377026e-1, 5.770742450594002e-1, -2.783714659030374e-5);
         this.texture = 'assets/sun.jpg';
         this.name = 'Earth';
-        this.eccentricity = 1.693936505240274E-02;
-        this.majorAxis = 9.997893698231427E-01;
-        this.argumentOfPeriapsis = 3.460022671282024E+02;
-        this.ascendingNode = 1.180185004251146E+02;
-        this.inclination = 1.619499879517213E-03;
-        this.trueAnomaly = 2.914962922586066E+02;
-        this.meanAnomaly = 2.932939316914255E+02;
-        
+        this.eccentricity = 1.693936505240274e-2;
+        this.majorAxis = 9.997893698231427e-1;
+        this.argumentOfPeriapsis = 3.460022671282024e2;
+        this.ascendingNode = 1.180185004251146e2;
+        this.inclination = 1.619499879517213e-3;
+        this.trueAnomaly = 2.914962922586066e2;
+        this.meanAnomaly = 2.932939316914255e2;
+
         this.build();
         this.buildOrbit();
     }

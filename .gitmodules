@@ -1,0 +1,3 @@
+[submodule "ng-solar-system"]
+	path = ng-solar-system
+	url = https://github.com/Niflou/ng-solar-system.git

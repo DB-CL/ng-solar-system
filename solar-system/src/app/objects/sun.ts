@@ -1,5 +1,5 @@
 import { environment } from 'environments/environment';
-import { SpaceObject } from './spaceobject';
+import { SpaceObject, ObjectType } from './spaceobject';
 import { HorizonCoordinates } from '../horizon-coordinates';
 import * as THREE from 'three';
 
@@ -11,6 +11,7 @@ export class Sun extends SpaceObject {
         this.coordinates = new HorizonCoordinates(0, 0, 0);
         this.texture = 'assets/sun.jpg';
         this.name = 'Sun';
+        this.type = ObjectType.Sun;
         this.build();
     }
 }

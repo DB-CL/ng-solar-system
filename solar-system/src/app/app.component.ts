@@ -43,14 +43,6 @@ export class AppComponent implements OnInit {
         this.core.centerCameraOn(object);
     }
 
-    public onSliderChange(event: any) {
-        this.core.setAngle(event.value)
-    }
-
-    public onSliderChange2(event: any) {
-        this.core.setAngle2(event.value)
-    }
-
     public update() {
         // this.sun.light.position.copy(this.core.camera.position);
     }

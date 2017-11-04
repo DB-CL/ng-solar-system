@@ -2,6 +2,14 @@ import { environment } from 'environments/environment';
 import { HorizonCoordinates } from '../horizon-coordinates';
 import * as THREE from 'three';
 
+export enum ObjectType {
+    Sun,
+    Planet,
+    Satellite,
+    Comet,
+    Asteroid
+}
+
 export class SpaceObject {
     public name: string;
     public radius: number;
@@ -9,7 +17,9 @@ export class SpaceObject {
     public coordinates: HorizonCoordinates;
     public mesh: THREE.Mesh;
     public light: THREE.SpotLight;
-    
+    public type: ObjectType;
+    public code: number; // code in Horizon JPL
+
     constructor() {}
 
     public build() {
@@ -42,6 +52,7 @@ export class SpaceObject {
             });
             const sprite = new THREE.Sprite(spriteMat);
             sprite.position.y = this.radius / environment.distanceCoef * 1.1;
+
             mesh.add(sprite);
         }
 
