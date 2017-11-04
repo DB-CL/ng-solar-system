@@ -1,3 +1,6 @@
 [submodule "ng-solar-system"]
 	path = ng-solar-system
 	url = https://github.com/Niflou/ng-solar-system.git
+[submodule "api"]
+	path = api
+	url = https://github.com/Niflou/ng-solar-system-api.git
