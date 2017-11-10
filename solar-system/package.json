@@ -23,6 +23,7 @@
     "@angular/platform-browser": "latest",
     "@angular/platform-browser-dynamic": "latest",
     "@angular/router": "latest",
+    "chancejs": "0.0.8",
     "core-js": "latest",
     "detector": "latest",
     "moment": "^2.19.1",

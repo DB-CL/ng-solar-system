@@ -21,10 +21,12 @@ export class CoreService implements OnDestroy {
 
     public sun = new Sun();
     public spaceObjects: Map<string, SpaceObject>; //  name, object
+    public planets: Map<string, Orbiter>;
 
     constructor(private datahandler: DataHandlerService) {
         this.scaleVector = new THREE.Vector3();
         this.spaceObjects = new Map();
+        this.planets = new Map();
         this.alive = true;
     }
 
@@ -34,7 +36,7 @@ export class CoreService implements OnDestroy {
 
         this.datahandler.progression.takeWhile(() => this.alive).subscribe(progression => {
             if (progression === LoadingStep.PositionsLoaded) {
-                this.buildObjects();
+                this.build3DPlanetsAndSatellites();
                 this.centerCameraOn('Sun');
             }
         });
@@ -42,10 +44,9 @@ export class CoreService implements OnDestroy {
         this.datahandler.initialize();
     }
 
-    private buildScene() {
+    private buildScene(): void {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xffffff);
-        // this.scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -70,7 +71,7 @@ export class CoreService implements OnDestroy {
         this.scene.add(ambLight);
     }
 
-    private buildObjects() {
+    private build3DPlanetsAndSatellites(): void {
         const sun = this.datahandler.sun;
         sun.build3D();
         this.spaceObjects.set('Sun', sun);
@@ -83,6 +84,7 @@ export class CoreService implements OnDestroy {
                 moon.build3D();
                 moon.buildOrbit3D();
                 this.spaceObjects.set(moon.name, moon);
+                this.planets.set(planet.name, planet);
                 planet.add(moon.mesh);
                 planet.add(moon.orbit);
             });
@@ -126,11 +128,11 @@ export class CoreService implements OnDestroy {
 
     public animate() {
         requestAnimationFrame(() => this.animate());
-        this.spaceObjects.forEach(spaceObject => {
-            const sprite = spaceObject.mesh.children[0];
+        this.planets.forEach(planet => {
+            const sprite = planet.mesh.children[0];
             if (sprite !== undefined) {
                 const scaleFactor = 8;
-                const scale = this.scaleVector.subVectors(spaceObject.mesh.position, this.camera.position).length() / scaleFactor;
+                const scale = this.scaleVector.subVectors(planet.mesh.position, this.camera.position).length() / scaleFactor;
                 sprite.scale.set(scale, scale, 1);
             }
         });

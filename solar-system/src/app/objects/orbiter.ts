@@ -57,7 +57,7 @@ export class Orbiter extends SpaceObject {
             this.fromJSON(json);
         }
     }
-
+// https://www.clicktorelease.com/code/THREE.MeshLine/demo/index.html
     public fromJSON(json: OrbiterJSON) {
         this.code = json.horizon_code;
         this.barycenterCode = json.center_code;

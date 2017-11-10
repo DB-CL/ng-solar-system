@@ -9,10 +9,17 @@ import { AppComponent } from './app.component';
 import { CoreService } from './core.service';
 import { DataHandlerService } from './data-handler.service';
 
+import { DataProviderMockService } from './data-provider-mock.service';
+import { DataProviderService } from './data-provider.service';
+
+import { environment } from 'environments/environment';
+
 @NgModule({
     declarations: [AppComponent],
     imports: [BrowserModule, BrowserAnimationsModule, MatSliderModule, HttpModule],
-    providers: [CoreService, DataHandlerService],
+    providers: [CoreService, DataHandlerService, 
+        { provide: DataProviderService, useClass: environment.mock ? DataProviderMockService : DataProviderService }
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {}

@@ -1,10 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { environment } from 'environments/environment';
-import { Http } from '@angular/http';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Orbiter, SpaceObject, Sun, OrbiterJSON, Planet, ObjectType, PositionJSON } from './objects/index';
 import 'rxjs/add/operator/takeWhile';
 import * as moment from 'moment';
+import { DataProviderService } from './data-provider.service';
 
 export enum LoadingStep {
     SunLoaded,
@@ -15,18 +15,14 @@ export enum LoadingStep {
 
 @Injectable()
 export class DataHandlerService implements OnDestroy {
-    // progression as a behavior subject ?
-
     public progression: BehaviorSubject<LoadingStep>;
     public sun: Sun;
-    private alive = true;
-
     public date: moment.Moment;
-
-    // Dictionnary, if we need an object later
     public orbiters: Map<number, Orbiter | Planet> = new Map();
 
-    constructor(private http: Http) {
+    private alive = true;
+
+    constructor(private provider: DataProviderService) {
         this.sun = new Sun();
         this.progression = new BehaviorSubject(LoadingStep.SunLoaded);
         this.date = moment();
@@ -45,7 +41,7 @@ export class DataHandlerService implements OnDestroy {
     }
 
     public getPlanets() {
-        this.http.get(environment.API_URL + '/orbiters?type=' + ObjectType.Planet).subscribe(response => {
+        this.provider.getPlanets().subscribe(response => {
             const planets = response.json().data;
             if (planets !== undefined) {
                 planets.forEach((planetJSON: OrbiterJSON) => {
@@ -60,7 +56,7 @@ export class DataHandlerService implements OnDestroy {
     }
 
     public getSatellites() {
-        this.http.get(environment.API_URL + '/orbiters?type=' + ObjectType.Satellite).subscribe(response => {
+        this.provider.getSatellites().subscribe(response => {
             const satellites = response.json().data;
             if (satellites !== undefined) {
                 satellites.forEach((satJSON: OrbiterJSON) => {
@@ -79,7 +75,7 @@ export class DataHandlerService implements OnDestroy {
         if (this.orbiters.size > 0) {
             const codes = Array.from(this.orbiters.keys()).join(',');
             const dateStr = this.date.format('YYYYMMDD') + 'Z';
-            this.http.get(environment.API_URL + '/orbiters/' + codes + '/positions/' + dateStr).subscribe(response => {
+            this.provider.getPositions(this.orbiters, this.date).subscribe(response => {
                 const positions = response.json().data;
                 if (positions !== undefined) {
                     positions.forEach((positionJSON: PositionJSON) => {
