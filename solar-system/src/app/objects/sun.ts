@@ -1,9 +1,12 @@
 import { environment } from 'environments/environment';
 import { SpaceObject, ObjectType } from './spaceobject';
+import { Planet } from './planet';
 import { HorizonCoordinates } from '../horizon-coordinates';
 import * as THREE from 'three';
 
 export class Sun extends SpaceObject {
+
+    public planets: Planet[] = [];
 
     constructor() {
         super();
@@ -12,7 +15,6 @@ export class Sun extends SpaceObject {
         this.texture = 'assets/sun.jpg';
         this.name = 'Sun';
         this.type = ObjectType.Sun;
-        this.build();
     }
 }
 

@@ -3,11 +3,11 @@ import { HorizonCoordinates } from '../horizon-coordinates';
 import * as THREE from 'three';
 
 export enum ObjectType {
-    Sun,
-    Planet,
-    Satellite,
-    Comet,
-    Asteroid
+    Planet = 0,
+    Satellite = 1,
+    Comet = 2,
+    Asteroid = 3,
+    Sun = 4
 }
 
 export class SpaceObject {
@@ -18,11 +18,21 @@ export class SpaceObject {
     public mesh: THREE.Mesh;
     public light: THREE.SpotLight;
     public type: ObjectType;
-    public code: number; // code in Horizon JPL
+    public code: number; // code in Horizon JPL (sort of NASA id)
+    public barycenterCode: number; // Horizon JPL code of the barycenter
+    public mass: number;
+    public density: number;
+    public sideralRotationPeriod: number;
+    public sideralOrbitPeriod: number;
+    public magnitude: number;
+    public geometricAlbedo: number;
+    public equatorialGravity: number;
+    public escapeVelocity: number;
 
     constructor() {}
 
-    public build() {
+    public build3D() {
+        console.log('Build3D', this.name);
         const geometry = new THREE.SphereGeometry(this.radius / environment.distanceCoef, 100, 100);
 
         const textureLoader = new THREE.TextureLoader();
@@ -54,6 +64,8 @@ export class SpaceObject {
             sprite.position.y = this.radius / environment.distanceCoef * 1.1;
 
             mesh.add(sprite);
+        } else {
+            console.log('NAME UNDEFINED ...');
         }
 
         this.mesh = mesh;
@@ -80,5 +92,9 @@ export class SpaceObject {
         light.shadow.mapWidth = 1024;
         light.shadow.mapHeight = 1024;
         this.light = light;
+    }
+
+    public add(object: any): void {
+        this.mesh.add(object);
     }
 }

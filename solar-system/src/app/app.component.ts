@@ -40,6 +40,7 @@ export class AppComponent implements OnInit {
     }
 
     public centerOn(object: string) {
+        console.log('center on', object);
         this.core.centerCameraOn(object);
     }
 

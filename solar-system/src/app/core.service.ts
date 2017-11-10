@@ -1,36 +1,45 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { environment } from 'environments/environment';
 
-import { Orbitable, Sun, Mars, Earth, SpaceObject } from './objects/index';
+import { DataHandlerService, LoadingStep } from './data-handler.service';
+import { Orbiter, Sun, SpaceObject } from './objects/index';
 
+import 'rxjs/add/operator/takeWhile';
 import * as THREE from 'three';
 declare const require: (moduleId: string) => any;
 const OrbitControls = require('three-orbit-controls')(THREE);
 
 @Injectable()
-export class CoreService {
+export class CoreService implements OnDestroy {
     private scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
     private scaleVector: THREE.Vector3;
-    private angle: number;
+    private alive: boolean;
 
     public controls: any;
 
     public sun = new Sun();
-    public spaceObjects: Map<string, SpaceObject>;
+    public spaceObjects: Map<string, SpaceObject>; //  name, object
 
-    constructor() {
+    constructor(private datahandler: DataHandlerService) {
         this.scaleVector = new THREE.Vector3();
         this.spaceObjects = new Map();
+        this.alive = true;
     }
 
     public init(): void {
         this.buildScene();
         this.buildAxes(100);
-        this.buildSun();
-        this.buildPlanets();
-        this.centerCameraOn('Mars');
+
+        this.datahandler.progression.takeWhile(() => this.alive).subscribe(progression => {
+            if (progression === LoadingStep.PositionsLoaded) {
+                this.buildObjects();
+                this.centerCameraOn('Sun');
+            }
+        });
+
+        this.datahandler.initialize();
     }
 
     private buildScene() {
@@ -45,30 +54,55 @@ export class CoreService {
         const container = document.getElementById('container');
         container.appendChild(this.renderer.domElement);
 
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0001, 10000);
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0001, 100000);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableKeys = false;
 
         // enable animation loop when using damping or autorotation
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.25;
-
+        // this.controls.enableDamping = true;
+        // this.controls.dampingFactor = 0.25;
+        // THREE.SceneUtils.traverseHierarchy( object, function ( object ) { object.visible = false; } );
+        // myObject3D.traverse( function ( object ) { object.visible = false; } );
         this.controls.enableZoom = true;
 
         const ambLight = new THREE.AmbientLight(0x404040);
         this.scene.add(ambLight);
     }
 
-    public centerCameraOn(objectName: string) {
-        
-        const planet = this.spaceObjects.get(objectName);
-        // this.camera.lookAt(planet.mesh.position);
-        this.controls.target.set(planet.coordinates.getSceneX(), planet.coordinates.getSceneY(), planet.coordinates.getSceneZ());
+    private buildObjects() {
+        const sun = this.datahandler.sun;
+        sun.build3D();
+        this.spaceObjects.set('Sun', sun);
 
-        this.camera.position.x = planet.mesh.position.x;
-        this.camera.position.y = planet.mesh.position.y;
-        this.camera.position.z = planet.mesh.position.z + 30 * planet.radius / environment.distanceCoef;
+        this.datahandler.sun.planets.forEach(planet => {
+            planet.build3D();
+            planet.buildOrbit3D();
+            this.spaceObjects.set(planet.name, planet);
+            planet.satellites.forEach(moon => {
+                moon.build3D();
+                moon.buildOrbit3D();
+                this.spaceObjects.set(moon.name, moon);
+                planet.add(moon.mesh);
+                planet.add(moon.orbit);
+            });
+            sun.add(planet.mesh);
+            sun.add(planet.orbit);
+        });
+
+        this.scene.add(sun.mesh);
+        this.scene.add(sun.light);
+    }
+
+
+    public centerCameraOn(objectName: string) {
+        const object = this.spaceObjects.get(objectName);
+        // this.camera.lookAt(planet.mesh.position);
+        this.controls.target.set(object.coordinates.getSceneX(), object.coordinates.getSceneY(), object.coordinates.getSceneZ());
+
+        this.camera.position.x = object.mesh.position.x;
+        this.camera.position.y = object.mesh.position.y;
+        this.camera.position.z = object.mesh.position.z + 30 * object.radius / environment.distanceCoef;
     }
 
     public buildAxes(length) {
@@ -84,30 +118,6 @@ export class CoreService {
         this.scene.add(axes);
     }
 
-    private buildSun() {
-        this.addSpaceObject(this.sun);
-    }
-
-    private buildPlanets() {
-        this.addPlanet(new Mars());
-        this.addPlanet(new Earth());
-    }
-
-    private addPlanet(planet: Orbitable) {
-        this.addSpaceObject(planet);
-
-        this.spaceObjects.set(planet.name, planet);
-
-        if (planet.orbit !== undefined) {
-            this.scene.add(planet.orbit);
-        }
-    }
-
-    private addSpaceObject(spaceobject: SpaceObject) {
-        this.scene.add(spaceobject.mesh);
-        this.scene.add(spaceobject.light);
-    }
-
     private render() {
         // const currentTime = Date.now();
         // this.uniforms.iGlobalTime.value = (currentTime - this.startTime) * 0.001;
@@ -117,10 +127,12 @@ export class CoreService {
     public animate() {
         requestAnimationFrame(() => this.animate());
         this.spaceObjects.forEach(spaceObject => {
-            const scaleFactor = 8;
             const sprite = spaceObject.mesh.children[0];
-            const scale = this.scaleVector.subVectors(spaceObject.mesh.position, this.camera.position).length() / scaleFactor;
-            sprite.scale.set(scale, scale, 1);
+            if (sprite !== undefined) {
+                const scaleFactor = 8;
+                const scale = this.scaleVector.subVectors(spaceObject.mesh.position, this.camera.position).length() / scaleFactor;
+                sprite.scale.set(scale, scale, 1);
+            }
         });
 
         this.render();
@@ -146,8 +158,12 @@ export class CoreService {
         geom.vertices.push(dst.clone());
         geom.computeLineDistances(); // This one is SUPER important, otherwise dashed lines will appear as simple plain lines
 
-        const axis = new THREE.Line(geom, mat, THREE.LinePieces);
+        const axis = new THREE.Line(geom, mat, THREE.LineSegments);
 
         return axis;
+    }
+
+    public ngOnDestroy() {
+        this.alive = false;
     }
 }
