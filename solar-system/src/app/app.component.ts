@@ -1,8 +1,8 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-
 import * as THREE from 'three';
 declare const require: (moduleId: string) => any;
 const OrbitControls = require('three-orbit-controls')(THREE);
+import { environment } from 'environments/environment';
 
 import { CoreService } from './core.service';
 

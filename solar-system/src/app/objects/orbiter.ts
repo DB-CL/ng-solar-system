@@ -1,25 +1,27 @@
 import { environment } from 'environments/environment';
-import { SpaceObject } from './spaceobject';
+import { SpaceObject, Texture } from './spaceobject';
 import { HorizonCoordinates } from '../horizon-coordinates';
-
+import { SolarLogger } from 'app/logger.service';
 import * as THREE from 'three';
 
 export interface OrbiterJSON {
     horizon_code: number;
-    center_code: number;
+    center_code?: number;
     orbit_around_center_code: number;
     type: number;
     name: string;
-    equatorial_radius: number;
-    mean_radius: number;
-    mass: number;
-    density: number;
-    sideral_rotation_period: number;
-    sideral_orbit_period: number;
-    magnitude: number;
-    geometric_albedo: number;
-    equatorial_gravity: number;
-    escape_velocity: number;
+    equatorial_radius?: number;
+    mean_radius?: number;
+    mass?: number;
+    density?: number;
+    sideral_rotation_period?: number;
+    sideral_orbit_period?: number;
+    magnitude?: number; 
+    geometric_albedo?: number;
+    equatorial_gravity?: number;
+    escape_velocity?: number;
+    color?: string;
+    texture?: Texture;
 }
 
 export interface PositionJSON {
@@ -57,8 +59,9 @@ export class Orbiter extends SpaceObject {
             this.fromJSON(json);
         }
     }
-// https://www.clicktorelease.com/code/THREE.MeshLine/demo/index.html
+
     public fromJSON(json: OrbiterJSON) {
+        this.logger.debug('Orbiter::fromJSON', json);
         this.code = json.horizon_code;
         this.barycenterCode = json.center_code;
         this.type = json.type; // if I did good, the types should be corresponding
@@ -72,9 +75,19 @@ export class Orbiter extends SpaceObject {
         this.geometricAlbedo = json.geometric_albedo;
         this.equatorialGravity = json.equatorial_gravity;
         this.escapeVelocity = json.escape_velocity;
+
+        if (json.color !== undefined) {
+            this.orbitColor = parseInt(json.color, 16);
+        }
+
+        if (json.texture !== undefined) {
+            this.texture = json.texture;
+        }
+
     }
 
     public positionFromJSON(json: PositionJSON) {
+        this.logger.debug('Orbiter::positionFromJSON', json);
         this.eccentricity = json.eccentricity;
         this.inclination = json.inclination;
         this.ascendingNode = json.ascending_node;
@@ -84,6 +97,7 @@ export class Orbiter extends SpaceObject {
     }
 
     public buildOrbit3D(): void {
+        this.logger.debug('Orbiter::buildOrbit3D');
         if (this.eccentricity !== undefined && this.majorAxis !== undefined) {
             const container = new THREE.Object3D();
             /*
@@ -103,8 +117,7 @@ export class Orbiter extends SpaceObject {
             const ellipsePath = new THREE.CurvePath();
             ellipsePath.add(ellipse);
 
-            const ellipseGeometry = ellipsePath.createPointsGeometry(this.ellipseNumberOfPoints);
-
+            const ellipseGeometry = new THREE.BufferGeometry().setFromPoints(ellipsePath.getPoints(this.ellipseNumberOfPoints));
             const line = new THREE.Line(ellipseGeometry, material);
 
             container.add(line);
@@ -116,3 +129,4 @@ export class Orbiter extends SpaceObject {
         }
     }
 }
+

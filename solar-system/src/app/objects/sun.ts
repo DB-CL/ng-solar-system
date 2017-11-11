@@ -12,7 +12,9 @@ export class Sun extends SpaceObject {
         super();
         this.radius = 696392;
         this.coordinates = new HorizonCoordinates(0, 0, 0);
-        this.texture = 'assets/sun.jpg';
+        this.texture = {
+            map: 'sun.jpg'
+        };
         this.name = 'Sun';
         this.type = ObjectType.Sun;
     }

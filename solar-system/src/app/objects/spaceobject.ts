@@ -1,6 +1,8 @@
 import { environment } from 'environments/environment';
-import { HorizonCoordinates } from '../horizon-coordinates';
+import { HorizonCoordinates } from 'app/horizon-coordinates';
 import * as THREE from 'three';
+import { SolarLogger } from 'app/logger.service';
+import { AppInjector } from 'app/helpers/app-injector';
 
 export enum ObjectType {
     Planet = 0,
@@ -10,10 +12,18 @@ export enum ObjectType {
     Sun = 4
 }
 
+export interface Texture {
+    map?: string;
+    bumpMap?: string;
+    bumpScale?: number;
+    specularMap?: string;
+    specular?: string;
+}
+
 export class SpaceObject {
     public name: string;
     public radius: number;
-    protected texture: string;
+    protected texture: Texture;
     public coordinates: HorizonCoordinates;
     public mesh: THREE.Mesh;
     public light: THREE.SpotLight;
@@ -28,18 +38,41 @@ export class SpaceObject {
     public geometricAlbedo: number;
     public equatorialGravity: number;
     public escapeVelocity: number;
+    protected logger: SolarLogger;
 
-    constructor() {}
+    constructor() {
+        this.logger = AppInjector.get(SolarLogger);
+    }
 
     public build3D() {
-        console.log('Build3D', this.name);
+        this.logger.debug('SpaceObject::Build3D', this.name);
         const geometry = new THREE.SphereGeometry(this.radius / environment.distanceCoef, 100, 100);
 
         const textureLoader = new THREE.TextureLoader();
 
-        const material = new THREE.MeshPhongMaterial({
-            map: textureLoader.load(this.texture)
-        });
+        const materialParameter: any = {};
+
+        if (this.texture !== undefined) {
+            if (this.texture.map !== undefined) {
+                materialParameter.map = THREE.ImageUtils.loadTexture('assets/textures/' + this.texture.map);
+            }
+            if (this.texture.bumpMap !== undefined) {
+                materialParameter.bumpMap = THREE.ImageUtils.loadTexture('assets/textures/' + this.texture.bumpMap);
+            }
+            if (this.texture.bumpScale !== undefined) {
+                materialParameter.bumpScale = this.texture.bumpScale;
+            }
+            if (this.texture.specularMap !== undefined) {
+                materialParameter.specularMap = THREE.ImageUtils.loadTexture('assets/textures/' + this.texture.specularMap);
+            }
+            if (this.texture.specular !== undefined) {
+                materialParameter.specular = new THREE.Color('grey');
+            }
+        }
+        this.logger.info('texture', this.texture);
+
+        const material = new THREE.MeshPhongMaterial(materialParameter);
+
         const mesh = new THREE.Mesh(geometry, material);
         mesh.overdraw = true;
         mesh.castShadow = true;
@@ -65,7 +98,7 @@ export class SpaceObject {
 
             mesh.add(sprite);
         } else {
-            console.log('NAME UNDEFINED ...');
+            this.logger.warn('SpaceObject::build3D - Name undefined');
         }
 
         this.mesh = mesh;
@@ -74,6 +107,7 @@ export class SpaceObject {
     }
 
     private addLight() {
+        this.logger.debug('SpaceObject::addLight');
         // const spotLight = new THREE.SpotLight(0xffffff);
         // this.light = spotLight;
 
@@ -95,6 +129,7 @@ export class SpaceObject {
     }
 
     public add(object: any): void {
+        this.logger.debug('SpaceObject::add', object.name);
         this.mesh.add(object);
     }
 }
